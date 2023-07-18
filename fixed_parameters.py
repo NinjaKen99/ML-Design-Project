@@ -1,5 +1,15 @@
 ##### List of parameters used that are not subject to change #####
 
+### FILES ###
+# ES 
+ES_dev_in = open("ES/dev.in","r",encoding="utf-8").read() 
+ES_dev_out = open("ES/dev.out","r",encoding="utf-8").read() 
+ES_train = open("ES/train","r",encoding="utf-8").read() 
+# RU 
+RU_dev_in = open("RU/dev.in","r",encoding="utf-8").read() 
+RU_dev_out = open("RU/dev.out","r",encoding="utf-8").read() 
+RU_train = open("RU/train","r",encoding="utf-8").read() 
+
 ### TAGS ###
 NUMBER_OF_TAGS = 7
 
