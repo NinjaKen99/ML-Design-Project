@@ -47,7 +47,7 @@ def estimate_emission_parameter_v3(data, TAG): # modified for part c
                 counter["Unknown"] += 1
             else:
                 counter[word] += 1
-    return counter
+    return counter # return dictionary, counting all words and total with the TAG
 
 #____________________TESTING____________________#
 # run funtions below
