@@ -63,7 +63,19 @@ def produce_tag(data, TAGS):
     word_dict = {}
     for tag in TAGS:
         tag_dict[tag] = estimate_emission_parameter_v3(data, tag)
-    return
+        for key in tag_dict[tag].keys:
+            word_dict[key] = None
+    for word in word_dict.keys:
+        emission_parameter = 0
+        y_star = None
+        for tag in TAGS:
+            try:
+                if (tag_dict[tag][word] > emission_parameter):
+                    y_star = tag
+            finally:
+                pass
+        word_dict[word] = y_star
+    return word_dict
 
 #____________________TESTING____________________#
 # run funtions below
