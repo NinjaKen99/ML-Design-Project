@@ -46,13 +46,17 @@ def estimate_emission_parameter_v3(data, TAG): # modified for part c
             if (word == unknown):
                 counter["Unknown"] += 1
             else:
-                counter[word] += 1
+                if (word not in counter.keys):
+                    counter[word] = 1
+                else: counter[word] += 1
     # new dictionary with emission parameter for each word that exists
-    emission_parameters = {}
+    emission_parameters = {"Unknown": counter["Unknown"]/(counter["Count"] + counter["Unknown"])}
     total = counter["Count"]
     k = counter["Unknown"]
-    
-    return counter # return dictionary with all emission parameters
+    for keys, values in counter.items:
+        if (keys != "Count" or keys != "Unknown"):
+            emission_parameters[keys] = counter[keys] / (counter["Count"] + counter["Unknown"])        
+    return emission_parameters # return dictionary with all emission parameters
 
 def produce_tag(data, TAGS):
     tag_dict = {}
@@ -63,4 +67,3 @@ def produce_tag(data, TAGS):
 
 #____________________TESTING____________________#
 # run funtions below
-
