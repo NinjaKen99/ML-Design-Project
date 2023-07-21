@@ -47,7 +47,20 @@ def estimate_emission_parameter_v3(data, TAG): # modified for part c
                 counter["Unknown"] += 1
             else:
                 counter[word] += 1
-    return counter # return dictionary, counting all words and total with the TAG
+    # new dictionary with emission parameter for each word that exists
+    emission_parameters = {}
+    total = counter["Count"]
+    k = counter["Unknown"]
+    
+    return counter # return dictionary with all emission parameters
+
+def produce_tag(data, TAGS):
+    tag_dict = {}
+    word_dict = {}
+    for tag in TAGS:
+        tag_dict[tag] = estimate_emission_parameter_v3(data, tag)
+    return
 
 #____________________TESTING____________________#
 # run funtions below
+
