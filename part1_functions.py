@@ -6,7 +6,7 @@ from fixed_parameters import ES_dev_out, RU_dev_out
 from fixed_parameters import Invalid_Word as unknown
 
 # Functions
-def estimate_emission_parameter_v1(data, WORD, TAG): # part a
+def estimate_emission_parameter_v1(data, WORD, TAG): # Part a: For training
     # Split file by line
     dataset = data.split("\n")
     # Set up dictionary for counting
@@ -27,7 +27,7 @@ def estimate_emission_parameter_v1(data, WORD, TAG): # part a
     result = counter["Word"]/counter["Count"]
     return result
 
-def estimate_emission_parameter_v2(data, WORD, TAG): # part b
+def estimate_emission_parameter_v2(data, WORD, TAG): # Part b: For testing
     # Split file by line
     dataset = data.split("\n")
     # Set up dictionary for counting
@@ -51,12 +51,36 @@ def estimate_emission_parameter_v2(data, WORD, TAG): # part b
         return counter["Unknown"] / (counter["Count"] + counter["Unknown"])
     return counter["Word"] / (counter["Count"] + counter["Unknown"])
 
-def estimate_emission_parameter_v3(data, TAG): # modified for part c
+def estimate_emission_parameter_v3(data, TAG): # Modified for part c: For training
+    # Split file by line
+    dataset = data.split("\n")
+    # Set up dictionary for counting and emission parameter for each word that exists
+    counter = {"Count": 0}
+    emission_parameters = {}
+    for line in dataset:
+        # Account for gaps in file (Skip)
+        if (line != ""):
+            # Split line into word and tag
+            pair = line.split(" ")
+            word, tag = pair[0], pair[1]
+            # Perform Counting
+            if (tag == TAG): # Count for y
+                counter["Count"] += 1
+                if (word not in counter.keys()): # Count for all x
+                    counter[word.encode('utf-8')] = 1 # Add entry if not exist
+                    emission_parameters[word.encode('utf-8')] = None
+                else: counter[word] += 1
+    total = counter["Count"] # Count(y)
+    for keys in emission_parameters.keys():
+        emission_parameters[keys] = counter[keys] / total      
+    return emission_parameters # return dictionary with all emission parameters
+
+''' Faulty
+def estimate_emission_parameter_v3(data, TAG): # Modified for part c: For training
     # Split file by line
     dataset = data.split("\n")
     # Set up dictionary for counting
     counter = {"Count": 0, "Unknown": 1}
-    
     for line in dataset:
         # Account for gaps in file (Skip)
         if (line != ""):
@@ -79,6 +103,7 @@ def estimate_emission_parameter_v3(data, TAG): # modified for part c
         if (keys != "Count" or keys != "Unknown"):
             emission_parameters[keys] = counter[keys] / (counter["Count"] + counter["Unknown"])        
     return emission_parameters # return dictionary with all emission parameters
+'''
 
 def produce_tag(data, TAGS):
     tag_dict = {}
@@ -94,7 +119,7 @@ def produce_tag(data, TAGS):
             try:
                 if (tag_dict[tag][word] > emission_parameter):
                     y_star = tag
-            finally:
+            except:
                 pass
         word_dict[word] = y_star
     return word_dict
@@ -102,8 +127,5 @@ def produce_tag(data, TAGS):
 #____________________TESTING____________________#
 # run funtions below
 
-<<<<<<< HEAD
-print(produce_tag(RU_train, TAGS))
-=======
-print(produce_tag(RU_train, TAGS))
->>>>>>> 2818f5a2873e65c12276da2eec1a6a0bd66059fe
+tagset = produce_tag(ES_train, TAGS)
+print(tagset)
