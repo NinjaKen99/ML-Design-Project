@@ -137,6 +137,37 @@ def recall(correctly_predicted_entities, gold_entities):
 def f_score(precision, recall):
     return 2 / ((1 / precision) + (1 / recall))
 
+# Sentiment analysis
+def sentiment_analysis(file, emission_parameters,gold_tags):
+    word_tag_list = [] # combine word and its tag into a string, then append to a list
+    total_correct_predictions = 0
+    total_predicted_entities = 0
+    total_gold_entities = 0
+    
+    for line, gold_tag in zip(file,gold_tags):
+        word = line.strip()
+        word_tag_pair = ""
+        if line != "\n":
+            if line == "\n":
+                tag_for_word = max(emission_parameters[word],key=emission_parameters[word].get)
+            else:
+                tag_for_word = max(emission_parameters["#UNK"],key=emission_parameters["#UNK"].get)
+            word_tag_pair = word + " " + tag_for_word
+        word_tag_list.append(word_tag_pair)
+        
+        if word_tag_pair == gold_tag:
+            total_correct_predictions += 1
+        if tag_for_word != "O":
+            total_predicted_entities += 1
+        if gold_tag != "O":
+            total_gold_entities += 1
+            
+        p = precision(total_correct_predictions, total_predicted_entities)
+        r = recall(total_correct_predictions, total_gold_entities)
+        f = f_score(p, r)
+        
+    return word_tag_list, p, r, f
+
 #____________________TESTING____________________#
 # run funtions below
 
