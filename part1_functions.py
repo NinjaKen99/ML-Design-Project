@@ -118,6 +118,7 @@ def produce_tag(data, TAGS): # part c: For training
         for tag in TAGS:
             try:
                 if (tag_dict[tag][word] > emission_parameter):
+                    emission_parameter = tag_dict[tag][word]
                     y_star = tag
             except:
                 pass
@@ -168,17 +169,20 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
         
     return word_tag_list, p, r, f
 
+ES_dev_out = sentiment_analysis(ES_dev_in, produce_tag,ES_dev_out)
+RU_dev_out = sentiment_analysis(RU_dev_in, produce_tag,RU_dev_out)
+
 # Writing to Files
-with open('Data/RU/dev.p1.out', 'w', encoding="utf-8") as f:
-   f.write('\n'.join(RU_devout_lines))
 with open('Data/ES/dev.p1.out', 'w', encoding="utf-8") as f:
-   f.write('\n'.join(ES_devout_lines))
+   f.write('\n'.join(ES_dev_out))
+with open('Data/RU/dev.p1.out', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(RU_dev_out))
    
 # Reading lines from dev.p1.out files
 with open('Data/ES/dev.p1.out', 'r', encoding="utf-8") as f:
-    ES_p1_devout = f.readlines()
+    ES_p1_dev_out = f.readlines()
 with open('Data/RU/dev.p1.out', 'r', encoding="utf-8") as f:
-    RU_p1_devout = f.readlines()
+    RU_p1_dev_out = f.readlines()
 
 #____________________TESTING____________________#
 # run funtions below
