@@ -157,7 +157,7 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
         
         if word_tag_pair == gold_tag:
             total_correct_predictions += 1
-        if tag_for_word != "O":
+        if word_tag_pair != "O":
             total_predicted_entities += 1
         if gold_tag != "O":
             total_gold_entities += 1
@@ -167,6 +167,18 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
         f = f_score(p, r)
         
     return word_tag_list, p, r, f
+
+# Writing to Files
+with open('Data/RU/dev.p1.out', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(RU_devout_lines))
+with open('Data/ES/dev.p1.out', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(ES_devout_lines))
+   
+# Reading lines from dev.p1.out files
+with open('Data/ES/dev.p1.out', 'r', encoding="utf-8") as f:
+    ES_p1_devout = f.readlines()
+with open('Data/RU/dev.p1.out', 'r', encoding="utf-8") as f:
+    RU_p1_devout = f.readlines()
 
 #____________________TESTING____________________#
 # run funtions below
