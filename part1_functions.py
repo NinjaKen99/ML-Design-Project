@@ -106,17 +106,21 @@ def estimate_emission_parameter_v3(data, TAG): # Modified for part c: For traini
 '''
 
 def produce_tag(data, TAGS): # part c: For training
+    # Create dictionary for storing data
     tag_dict = {}
     word_dict = {}
+    # Create emission parameter tracking dictionary
     for tag in TAGS:
         tag_dict[tag] = estimate_emission_parameter_v3(data, tag)
-        for key in tag_dict[tag].keys():
+        # Create a word list using a dictionary
+        for key in tag_dict[tag].keys(): 
             word_dict[key] = None
+    # Loop through word list to assign tag
     for word in word_dict.keys():
         emission_parameter = 0
         y_star = None
         for tag in TAGS:
-            try:
+            try: # To ignore error if dictionary lacks the key
                 if (tag_dict[tag][word] > emission_parameter):
                     emission_parameter = tag_dict[tag][word]
                     y_star = tag
