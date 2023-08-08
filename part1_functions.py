@@ -7,48 +7,71 @@ from fixed_parameters import Invalid_Word as unknown
 
 # Functions
 def estimate_emission_parameter_v1(data, WORD, TAG): # part a
+    # Split file by line
     dataset = data.split("\n")
+    # Set up dictionary for counting
     counter = {"Count": 0, "Word": 0}
+    
     for line in dataset:
-        pair = line.split(" ")
-        word, tag = pair[0], pair[1]
-        if (tag == TAG):
-            counter["Count"] += 1
-            if (word == WORD):
-                counter["Word"] += 1
+        # Account for gaps in file (Skip)
+        if (line != ""):
+            # Split line into word and tag
+            pair = line.split(" ")
+            word, tag = pair[0], pair[1]
+            # Perform Counting
+            if (tag == TAG):
+                counter["Count"] += 1
+                if (word == WORD):
+                    counter["Word"] += 1
+    # Calculate emission parameter
     result = counter["Word"]/counter["Count"]
     return result
 
 def estimate_emission_parameter_v2(data, WORD, TAG): # part b
+    # Split file by line
     dataset = data.split("\n")
-    counter = {"Count": 0, "Word": 0, "Unknown": 1}
+    # Set up dictionary for counting
+    counter = {"Count": 0, "Word": 0, "Unknown": 1} # Initialise k to 1
+    
     for line in dataset:
-        pair = line.split(" ")
-        word, tag = pair[0], pair[1]
-        if (tag == TAG):
-            counter["Count"] += 1
-            if (word == unknown):
-                counter["Unknown"] += 1
-            elif (word == WORD):
-                counter["Word"] += 1
+        # Account for gaps in file (Skip)
+        if (line != ""):
+            # Split line into word and tag
+            pair = line.split(" ")
+            word, tag = pair[0], pair[1]
+            # Perform Counting
+            if (tag == TAG):
+                counter["Count"] += 1
+                if (word == unknown):
+                    counter["Unknown"] += 1
+                elif (word == WORD):
+                    counter["Word"] += 1
+    # Calculate emission parameter depending on word or unknown word
     if (WORD == unknown):
         return counter["Unknown"] / (counter["Count"] + counter["Unknown"])
     return counter["Word"] / (counter["Count"] + counter["Unknown"])
 
 def estimate_emission_parameter_v3(data, TAG): # modified for part c
+    # Split file by line
     dataset = data.split("\n")
+    # Set up dictionary for counting
     counter = {"Count": 0, "Unknown": 1}
+    
     for line in dataset:
-        pair = line.split(" ")
-        word, tag = pair[0], pair[1]
-        if (tag == TAG):
-            counter["Count"] += 1
-            if (word == unknown):
-                counter["Unknown"] += 1
-            else:
-                if (word not in counter.keys()):
-                    counter[word] = 1
-                else: counter[word] += 1
+        # Account for gaps in file (Skip)
+        if (line != ""):
+            # Split line into word and tag
+            pair = line.split(" ")
+            word, tag = pair[0], pair[1]
+            # Perform Counting
+            if (tag == TAG):
+                counter["Count"] += 1
+                if (word == unknown):
+                    counter["Unknown"] += 1
+                else:
+                    if (word not in counter.keys()):
+                        counter[word] = 1
+                    else: counter[word] += 1
     # new dictionary with emission parameter for each word that exists
     emission_parameters = {"Unknown": counter["Unknown"]/(counter["Count"] + counter["Unknown"])}
     total = counter["Count"]
