@@ -120,16 +120,19 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
     total_correct_predictions = 0
     total_predicted_entities = 0
     total_gold_entities = 0
+    # Get lines for each file
+    data_test = file.split("\n")
+    data_check = gold_tags.split("\n")
     
-    for line, gold_tag in zip(file,gold_tags):
-        word = line.strip()
+    for word, gold_tag in zip(data_test, data_check):
         word_tag_pair = ""
-        if line != "\n":
-            if line == "\n":
-                tag_for_word = max(emission_parameters[word],key=emission_parameters[word].get)
-            else:
-                tag_for_word = max(emission_parameters["#UNK"],key=emission_parameters["#UNK"].get)
-            word_tag_pair = word + " " + tag_for_word
+        try : 
+            if word != "":
+                tag_for_word = emission_parameters[word]
+        except:
+            tag_for_word = emission_parameters[unknown]
+        
+        word_tag_pair = word + " " + tag_for_word
         word_tag_list.append(word_tag_pair)
         
         if word_tag_pair == gold_tag:
@@ -139,28 +142,32 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
         if gold_tag != "O":
             total_gold_entities += 1
             
-        p = precision(total_correct_predictions, total_predicted_entities)
-        r = recall(total_correct_predictions, total_gold_entities)
-        f = f_score(p, r)
+    p = precision(total_correct_predictions, total_predicted_entities)
+    r = recall(total_correct_predictions, total_gold_entities)
+    f = f_score(p, r)
         
     return word_tag_list, p, r, f
-
-ES_dev_out = sentiment_analysis(ES_dev_in, produce_tag,ES_dev_out)
-RU_dev_out = sentiment_analysis(RU_dev_in, produce_tag,RU_dev_out)
-
-# Writing to Files
-with open('Data/ES/dev.p1.out', 'w', encoding="utf-8") as f:
-   f.write('\n'.join(ES_dev_out))
-with open('Data/RU/dev.p1.out', 'w', encoding="utf-8") as f:
-   f.write('\n'.join(RU_dev_out))
-   
-# Reading lines from dev.p1.out files
-with open('Data/ES/dev.p1.out', 'r', encoding="utf-8") as f:
-    ES_p1_dev_out = f.readlines()
-with open('Data/RU/dev.p1.out', 'r', encoding="utf-8") as f:
-    RU_p1_dev_out = f.readlines()
 
 #____________________TESTING____________________#
 # run funtions below
 
-tagset = produce_tag(ES_train, TAGS)
+ES_tagset = produce_tag(ES_train, ES_dev_in, TAGS)
+RU_tagset = produce_tag(RU_train, RU_dev_in, TAGS)
+
+ES_dev_out, ES_precision, ES_recall, ES_f_score = sentiment_analysis(ES_dev_in, ES_tagset, ES_dev_out)
+RU_dev_out, RU_precision, RU_recall, RU_f_score= sentiment_analysis(RU_dev_in, RU_tagset, RU_dev_out)
+
+print(ES_precision, ES_recall, ES_f_score)
+print(RU_precision, RU_recall, RU_f_score)
+
+# Writing to Files
+with open('ES/dev.p1.out.txt', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(ES_dev_out))
+with open('RU/dev.p1.out.txt', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(RU_dev_out))
+   
+# Reading lines from dev.p1.out files
+with open('ES/dev.p1.out.txt', 'r', encoding="utf-8") as f:
+    ES_p1_dev_out = f.readlines()
+with open('RU/dev.p1.out.txt', 'r', encoding="utf-8") as f:
+    RU_p1_dev_out = f.readlines()
