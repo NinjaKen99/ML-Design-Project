@@ -80,4 +80,8 @@ def produce_tag(data, TAGS):
 #____________________TESTING____________________#
 # run funtions below
 
+<<<<<<< HEAD
 print(produce_tag(RU_train, TAGS))
+=======
+print(produce_tag(RU_train, TAGS))
+>>>>>>> 2818f5a2873e65c12276da2eec1a6a0bd66059fe
