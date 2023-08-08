@@ -64,14 +64,13 @@ def estimate_emission_parameter_v3(data, TAG): # modified for part c
             pair = line.split(" ")
             word, tag = pair[0], pair[1]
             # Perform Counting
-            if (tag == TAG):
-                counter["Count"] += 1
-                if (word == unknown):
+            if (word == unknown): # Count all unknowns
                     counter["Unknown"] += 1
-                else:
-                    if (word not in counter.keys()):
-                        counter[word] = 1
-                    else: counter[word] += 1
+            elif (tag == TAG): # Count for y
+                counter["Count"] += 1
+                if (word not in counter.keys()): # Count for all x
+                    counter[word] = 1 # Add entry if not exist
+                else: counter[word] += 1
     # new dictionary with emission parameter for each word that exists
     emission_parameters = {"Unknown": counter["Unknown"]/(counter["Count"] + counter["Unknown"])}
     total = counter["Count"]
