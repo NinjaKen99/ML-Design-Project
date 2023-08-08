@@ -124,6 +124,19 @@ def produce_tag(data, TAGS):
         word_dict[word] = y_star
     return word_dict
 
+# Precision function
+def precision(correctly_predicted_entities, total_predicted_entities):
+    return correctly_predicted_entities / total_predicted_entities
+
+# Recall function
+def recall(correctly_predicted_entities, gold_entities):
+    # gold entities refers to the entities with correct labels (from dev.out)
+    return correctly_predicted_entities / gold_entities
+
+# F_score function
+def f_score(precision, recall):
+    return 2 / ((1 / precision) + (1 / recall))
+
 #____________________TESTING____________________#
 # run funtions below
 
