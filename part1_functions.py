@@ -105,7 +105,7 @@ def estimate_emission_parameter_v3(data, TAG): # Modified for part c: For traini
     return emission_parameters # return dictionary with all emission parameters
 '''
 
-def produce_tag(data, TAGS):
+def produce_tag(data, TAGS): # part c: For training
     tag_dict = {}
     word_dict = {}
     for tag in TAGS:
@@ -137,7 +137,7 @@ def recall(correctly_predicted_entities, gold_entities):
 def f_score(precision, recall):
     return 2 / ((1 / precision) + (1 / recall))
 
-# Sentiment analysis
+# Sentiment analysis: For testing
 def sentiment_analysis(file, emission_parameters,gold_tags):
     word_tag_list = [] # combine word and its tag into a string, then append to a list
     total_correct_predictions = 0
@@ -157,7 +157,7 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
         
         if word_tag_pair == gold_tag:
             total_correct_predictions += 1
-        if tag_for_word != "O":
+        if word_tag_pair != "O":
             total_predicted_entities += 1
         if gold_tag != "O":
             total_gold_entities += 1
@@ -172,4 +172,3 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
 # run funtions below
 
 tagset = produce_tag(ES_train, TAGS)
-print(tagset)
