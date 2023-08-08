@@ -168,6 +168,18 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
         
     return word_tag_list, p, r, f
 
+# Writing to Files
+with open('Data/RU/dev.p1.out', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(RU_devout_lines))
+with open('Data/ES/dev.p1.out', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(ES_devout_lines))
+   
+# Reading lines from dev.p1.out files
+with open('Data/ES/dev.p1.out', 'r', encoding="utf-8") as f:
+    ES_p1_devout = f.readlines()
+with open('Data/RU/dev.p1.out', 'r', encoding="utf-8") as f:
+    RU_p1_devout = f.readlines()
+
 #____________________TESTING____________________#
 # run funtions below
 
