@@ -61,10 +61,11 @@ def estimate_emission_parameter_v3(data, k, TAG): # Modified for part c
             # Split line into word and tag
             pair = line.split(" ")
             word, tag = pair[0], pair[1]
+            word = word.lower()
             # Perform Counting
             if (tag == TAG): # Count for y
                 counter["Count"] += 1
-                if (word not in counter.keys()): # Count for all x
+                if (word.lower() not in counter.keys()): # Count for all x
                     counter[word] = 1 # Add entry if not exist
                     emission_parameters[word] = None
                 else: counter[word] += 1
@@ -148,8 +149,6 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
             elif (predict_back != None and tag_for_word != "O"):
                 if (tag_for_word[2:] != predict_back[2:] or tag_for_word[0] == "B"):
                     total_predicted_entities += 1
-            else: 
-                predict_back = None
             # Ignore if O
             if (gold_tag == "O"):
                 if tag_for_word != gold_tag:
@@ -231,7 +230,7 @@ with open('ES/dev.p1.out.txt', 'w', encoding="utf-8") as f:
    f.write('\n'.join(ES_dev_out))
 with open('RU/dev.p1.out.txt', 'w', encoding="utf-8") as f:
    f.write('\n'.join(RU_dev_out))
-   
+
 # Reading lines from dev.p1.out files
 with open('ES/dev.p1.out.txt', 'r', encoding="utf-8") as f:
     ES_p1_dev_out = f.readlines()
