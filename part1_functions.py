@@ -74,6 +74,7 @@ def estimate_emission_parameters(data, k=1): # Modified for part c
     
     count_emission, count_tag = calculate_emission_counts(data)
     emission_parameters = {}
+    emission_parameters2 = {}
     tag_probability = {'O':0,'B-positive':0,'B-neutral':0,'B-negative':0,'I-positive':0,'I-neutral':0,'I-negative':0} # Stores the tag probability of each word
 
     # Create entry for "#UNK#" in emission_params
@@ -91,6 +92,29 @@ def estimate_emission_parameters(data, k=1): # Modified for part c
     # print("emission parameters: ",emission_parameters)
     return emission_parameters
 
+def estimate_emission_parameters2(data, k=1): # Modified for part c
+    
+    count_emission, count_tag = calculate_emission_counts(data)
+    emission_parameters = {}
+    emission_parameters2 = {}
+    tag_probability = {'O':0,'B-positive':0,'B-neutral':0,'B-negative':0,'I-positive':0,'I-neutral':0,'I-negative':0} # Stores the tag probability of each word
+
+    # Create entry for "#UNK#" in emission_params
+    emission_parameters["#UNK#"] = deepcopy(tag_probability)
+    
+    for tag in count_tag.keys():
+        # denominator: used to normalise the emission probabilities
+        denominator = k + count_tag[tag]
+        for word in count_emission.keys():
+            if (word not in emission_parameters):
+                emission_parameters[word] = deepcopy(tag_probability)
+            numerator = count_emission[word][tag] # numerator: represents the count of occurences of a specific word associated with a particular tag in training data
+            emission_parameters[word][tag] = numerator/denominator
+            emission_parameters2[tag][word] = numerator/denominator
+        emission_parameters["#UNK#"][tag] = k/denominator
+        emission_parameters2[tag]["#UNK#"] = k/denominator
+    # print("emission parameters: ",emission_parameters)
+    return emission_parameters2
 #-----------------------------#
 
 # def produce_tag(data_train, data_test, TAGS): # part c: For training
