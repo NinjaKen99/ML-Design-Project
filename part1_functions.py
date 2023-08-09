@@ -154,20 +154,20 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
 ES_tagset = produce_tag(ES_train, ES_dev_in, TAGS)
 RU_tagset = produce_tag(RU_train, RU_dev_in, TAGS)
 
-# ES_dev_out, ES_precision, ES_recall, ES_f_score = sentiment_analysis(ES_dev_in, ES_tagset, ES_dev_out)
-# RU_dev_out, RU_precision, RU_recall, RU_f_score= sentiment_analysis(RU_dev_in, RU_tagset, RU_dev_out)
+ES_dev_out, ES_precision, ES_recall, ES_f_score = sentiment_analysis(ES_dev_in, ES_tagset, ES_dev_out)
+RU_dev_out, RU_precision, RU_recall, RU_f_score= sentiment_analysis(RU_dev_in, RU_tagset, RU_dev_out)
 
-# print(ES_precision, ES_recall, ES_f_score)
-# print(RU_precision, RU_recall, RU_f_score)
+print(ES_precision, ES_recall, ES_f_score)
+print(RU_precision, RU_recall, RU_f_score)
 
-# # Writing to Files
-# with open('ES/dev.p1.out.txt', 'w', encoding="utf-8") as f:
-#    f.write('\n'.join(ES_dev_out))
-# with open('RU/dev.p1.out.txt', 'w', encoding="utf-8") as f:
-#    f.write('\n'.join(RU_dev_out))
+# Writing to Files
+with open('ES/dev.p1.out.txt', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(ES_dev_out))
+with open('RU/dev.p1.out.txt', 'w', encoding="utf-8") as f:
+   f.write('\n'.join(RU_dev_out))
    
-# # Reading lines from dev.p1.out files
-# with open('ES/dev.p1.out.txt', 'r', encoding="utf-8") as f:
-#     ES_p1_dev_out = f.readlines()
-# with open('RU/dev.p1.out.txt', 'r', encoding="utf-8") as f:
-#     RU_p1_dev_out = f.readlines()
+# Reading lines from dev.p1.out files
+with open('ES/dev.p1.out.txt', 'r', encoding="utf-8") as f:
+    ES_p1_dev_out = f.readlines()
+with open('RU/dev.p1.out.txt', 'r', encoding="utf-8") as f:
+    RU_p1_dev_out = f.readlines()
