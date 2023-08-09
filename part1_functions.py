@@ -99,7 +99,7 @@ def produce_tag(data_train, data_test, TAGS): # part c: For training
             except:
                 pass
         word_dict[word] = y_star # Predicted Tag for each training word
-    return word_dict
+    return word_dict, tag_dict
 
 # Precision function
 def precision(correctly_predicted_entities, total_predicted_entities):
@@ -217,8 +217,8 @@ def count_gold_entities(data):
 #____________________TESTING____________________#
 # run funtions below
 
-ES_tagset = produce_tag(ES_train, ES_dev_in, TAGS)
-RU_tagset = produce_tag(RU_train, RU_dev_in, TAGS)
+ES_tagset, ES_eset = produce_tag(ES_train, ES_dev_in, TAGS)
+RU_tagset, RU_eset = produce_tag(RU_train, RU_dev_in, TAGS)
 
 ES_dev_out, ES_precision, ES_recall, ES_f_score = sentiment_analysis(ES_dev_in, ES_tagset, ES_dev_out)
 RU_dev_out, RU_precision, RU_recall, RU_f_score= sentiment_analysis(RU_dev_in, RU_tagset, RU_dev_out)
