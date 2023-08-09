@@ -96,7 +96,7 @@ def estimate_emission_parameters2(data, k=1): # Modified for part c
     
     count_emission, count_tag = calculate_emission_counts(data)
     emission_parameters = {}
-    emission_parameters2 = {}
+    emission_parameters2 = {'O':{},'B-positive':{},'B-neutral':{},'B-negative':{},'I-positive':{},'I-neutral':{},'I-negative':{}}
     tag_probability = {'O':0,'B-positive':0,'B-neutral':0,'B-negative':0,'I-positive':0,'I-neutral':0,'I-negative':0} # Stores the tag probability of each word
 
     # Create entry for "#UNK#" in emission_params
