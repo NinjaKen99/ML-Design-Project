@@ -2,13 +2,28 @@
 
 ### FILES ###
 # ES 
-ES_dev_in = open("ES/dev.in","r",encoding="utf-8").read() 
-ES_dev_out = open("ES/dev.out","r",encoding="utf-8").read() 
-ES_train = open("ES/train","r",encoding="utf-8").read() 
+# ES_dev_in = open("ES/dev.in","r",encoding="utf-8").read() 
+# ES_dev_out = open("ES/dev.out","r",encoding="utf-8").read() 
+# ES_train = open("ES/train","r",encoding="utf-8").read() 
+
+with open("ES/dev.in", "r", encoding="utf-8") as f:
+    ES_dev_in = f.readlines()
+with open("ES/dev.out", "r", encoding="utf-8") as f:
+    ES_dev_out = f.readlines()
+with open("ES/train", "r", encoding="utf-8") as f:
+    ES_train = f.readlines()
+
 # RU 
-RU_dev_in = open("RU/dev.in","r",encoding="utf-8").read() 
-RU_dev_out = open("RU/dev.out","r",encoding="utf-8").read() 
-RU_train = open("RU/train","r",encoding="utf-8").read() 
+# RU_dev_in = open("RU/dev.in","r",encoding="utf-8").read() 
+# RU_dev_out = open("RU/dev.out","r",encoding="utf-8").read() 
+# RU_train = open("RU/train","r",encoding="utf-8").read() 
+
+with open("RU/dev.in", "r", encoding="utf-8") as f:
+    RU_dev_in = f.readlines()
+with open("RU/dev.out", "r", encoding="utf-8") as f:
+    RU_dev_out = f.readlines()
+with open("RU/train", "r", encoding="utf-8") as f:
+    RU_train = f.readlines()
 
 ### TAGS ###
 NUMBER_OF_TAGS = 7
