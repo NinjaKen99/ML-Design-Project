@@ -212,38 +212,44 @@ def f_score(precision, recall):
         
 #     return word_tag_list, p, r, f
 
-# def count_gold_entities(data):
-#     number = 0
-#     previous_tag = None
-#     gold_data = data.split("\n")
-#     for line in gold_data:
-#         if (line != ""):
-#             pair = line.split(" ")
-#             tag = pair[1]
-#             match tag:
-#                 case "O":
-#                     previous_tag = None
-#                 case "I-positive" | "I-negative" | "I-neutral":
-#                     if (previous_tag == None): 
-#                         number += 1
-#                         previous_tag = tag
-#                     elif (previous_tag[2:] == tag[2:]):
-#                         pass
-#                     else:
-#                         number += 1
-#                         previous_tag = tag
-#                 case _:
-#                     number += 1
-#                     previous_tag = tag
-#         else:
-#             previous_tag = None
-#     return number
+#def count_gold_entities(data):
+#    number = 0
+#    previous_tag = None
+#    gold_data = data.split("\n")
+#    for line in gold_data:
+#        if (line != ""):
+#            pair = line.split(" ")
+#            tag = pair[1]
+#            match tag:
+#                case "O":
+#                    previous_tag = None
+#                case "I-positive" | "I-negative" | "I-neutral":
+#                    if (previous_tag == None): 
+#                        number += 1
+#                        previous_tag = tag
+#                    elif (previous_tag[2:] == tag[2:]):
+#                        pass
+#                    else:
+#                        number += 1
+#                        previous_tag = tag
+#                case _:
+#                    number += 1
+#                    previous_tag = tag
+#        else:
+#            previous_tag = None
+#    return number
 
 def sentiment_analysis(data, emission_parameters,gold_tags):
     word_tag_list = [] # combine word and its tag into a string, then append to a list
     total_correct_predictions = 0
     total_predicted_entities = 0
     total_gold_entities = 0
+    # Tracker
+    prev_head = None
+    prev_sent = None
+    entity_correct = None
+    prev_gold_head = None
+    prev_gold_sent = None
     
     for line, gold_tag in zip(data,gold_tags):
         word = line.strip()
@@ -254,17 +260,48 @@ def sentiment_analysis(data, emission_parameters,gold_tags):
             else:
                 tag_for_word = max(emission_parameters[word],key = emission_parameters[word].get)
             word_tag_pair = word + " " + tag_for_word
+            # Entity Count
+            if tag_for_word != "O":
+                cur_head = tag_for_word[0]
+                cur_sent = tag_for_word[2:]
+                if cur_head == "B" or (cur_head == "I" and prev_head == "O") or (cur_head == "I" and prev_head != "O" and cur_sent != prev_sent):
+                    total_predicted_entities += 1
+                prev_head = cur_head
+                prev_sent = cur_sent
+            else:
+                prev_head = "O"
+                prev_sent = None
         word_tag_list.append(word_tag_pair)
-        
-        if word_tag_pair == gold_tag:
-            total_correct_predictions += 1
-        if word_tag_pair != "O":
-            total_predicted_entities += 1
-        if gold_tag != "O":
-            total_gold_entities += 1
-            
-        p = precision(total_correct_predictions, total_predicted_entities)
-        r = recall(total_correct_predictions, total_gold_entities)
+        # Count Correct
+        if (gold_tag != "\n"):
+            gold_label = gold_tag.strip().split(" ")[1]
+            if gold_label != "O":
+                gold_head = gold_label[0]
+                gold_sent = gold_label[2:]
+                # if new entity
+                if gold_head == "B" or (gold_head == "I" and prev_gold_head == "O") or (gold_head == "I" and prev_gold_head != "O" and gold_sent != prev_gold_sent):
+                    total_gold_entities += 1
+                    if gold_label == tag_for_word: 
+                        total_correct_predictions += 1
+                        entity_correct = True
+                    else:
+                        entity_correct = False
+                elif gold_head == "I":
+                    if gold_label != tag_for_word and entity_correct == True: 
+                        total_correct_predictions -= 1
+                        entity_correct = False
+                prev_gold_head = gold_head
+                prev_gold_sent = gold_sent
+            else:
+                prev_gold_head = "O"
+                prev_gold_sent = None
+                entity_correct = None
+    
+    print(total_predicted_entities)
+    print(total_gold_entities)
+    print(total_correct_predictions)
+    p = precision(total_correct_predictions, total_predicted_entities)
+    r = recall(total_correct_predictions, total_gold_entities)
         # f = f_score(p, r)
         
     # return word_tag_list, p, r, f
