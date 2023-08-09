@@ -1,3 +1,7 @@
+# Importing libraries
+from collections import defaultdict
+from copy import deepcopy
+
 # Imports from another file
 from fixed_parameters import TAGS
 from fixed_parameters import ES_train, RU_train
@@ -6,100 +10,103 @@ from fixed_parameters import ES_dev_out, RU_dev_out
 from fixed_parameters import Invalid_Word as unknown
 
 # Functions
-def estimate_emission_parameter_v1(data, WORD, TAG): # Part a: For training
-    # Split file by line
-    dataset = data.split("\n")
-    # Set up dictionary for counting
-    counter = {"Count": 0, "Word": 0}
+
+#-----------------------------#
+def calculate_emission_counts(data): # Part a: For training
+        
+    count_emission = defaultdict(lambda: defaultdict(int)) # Use defaultdict to automatically initialize nested dictionaries
+    count_tag = defaultdict(int) # Use defaultdict to automatically initialize nested dictionaries
     
     for line in dataset:
         # Account for gaps in file (Skip)
-        if (line != ""):
+        if (line != "\n"):
             # Split line into word and tag
             pair = line.split(" ")
-            word, tag = pair[0], pair[1]
-            # Perform Counting
-            if (tag == TAG):
-                counter["Count"] += 1
-                if (word == WORD):
-                    counter["Word"] += 1
-    # Calculate emission parameter
-    result = counter["Word"]/counter["Count"]
-    return result
-
-def find_k (data_train, data_test): # part b
-    # Split file by line
-    dataset_train = data_train.split("\n")
-    dataset_test = data_test.split("\n")
-    word_list = []
-    k = 1 # initialise k to 1
-    for line in dataset_train:
-        if (line != ""):
-            # Split line into word and tag
-            pair = line.split(" ")
-            word = pair[0]
-            if word not in word_list:
-                word_list.append(word)
-    for line in dataset_test:
-        if (line != ""):
-            # Split line into word and tag
-            pair = line.split(" ")
-            word = pair[0]
-            if word not in word_list:
-                k += 1
-    return k
+            word = ''.join([x for x in wordlist[:-1]])
+            tag = wordlist[-1].strip() # Remove \n
             
-def estimate_emission_parameter_v3(data, k, TAG): # Modified for part c
-    # Split file by line
-    dataset = data.split("\n")
-    # Set up dictionary for counting and emission parameter for each word that exists
-    counter = {"Count": 0}
-    emission_parameters = {}
-    for line in dataset:
-        # Account for gaps in file (Skip)
-        if (line != ""):
-            # Split line into word and tag
-            pair = line.split(" ")
-            word, tag = pair[0], pair[1]
-            # Perform Counting
-            if (tag == TAG): # Count for y
-                counter["Count"] += 1
-                if (word not in counter.keys()): # Count for all x
-                    counter[word] = 1 # Add entry if not exist
-                    emission_parameters[word] = None
-                else: counter[word] += 1
-    total = counter["Count"] # Count(y)
-    # Emission parameters for words in train
-    for keys in emission_parameters.keys():
-        emission_parameters[keys] = counter[keys] / (total + k)   
-    # Emission parameter for unknown words
-    emission_parameters[unknown] = k / (total + k)
-    return emission_parameters # return dictionary with all emission parameters
+            emission_count[word][tag] += 1
+            tag_count[tag] += 1
+    return count_emission, count_tag
+#-----------------------------#
 
-def produce_tag(data_train, data_test, TAGS): # part c: For training
-    # Create dictionary for storing data
-    tag_dict = {}
-    word_dict = {}
-    k = find_k(data_train, data_test)
-    # Create emission parameter tracking dictionary
-    for tag in TAGS:
-        tag_dict[tag] = estimate_emission_parameter_v3(data_train, k, tag)
-        # Create a word list using a dictionary
-        for key in tag_dict[tag].keys(): 
-            word_dict[key] = None
-    # Loop through word list to assign tag
-    for word in word_dict.keys():
-        emission_parameter = 0
-        y_star = None
-        for tag in TAGS:
-            try: # To ignore error if dictionary lacks the key
-                if (tag_dict[tag][word] > emission_parameter):
-                    emission_parameter = tag_dict[tag][word]
-                    y_star = tag
-            except:
-                pass
-        word_dict[word] = y_star # Predicted Tag for each training word
-    return word_dict
+# def find_k (data_train, data_test): # part b
+#     # Split file by line
+#     dataset_train = data_train.split("\n")
+#     dataset_test = data_test.split("\n")
+#     word_list = []
+#     k = 1 # initialise k to 1
+#     for line in dataset_train:
+#         if (line != ""):
+#             # Split line into word and tag
+#             pair = line.split(" ")
+#             word = pair[0]
+#             if word not in word_list:
+#                 word_list.append(word)
+#     for line in dataset_test:
+#         if (line != ""):
+#             # Split line into word and tag
+#             pair = line.split(" ")
+#             word = pair[0]
+#             if word not in word_list:
+#                 k += 1
+#     return k
+
+#-----------------------------#
+  
+def estimate_emission_parameter(data, k,): # Modified for part c
+    
+    count_emission, count_tag = get_emission_counts(data)
+    emission_parameters = {}
+    
+    # Create tag_prob dictionary dynamically based on unique tags
+    unique_tags = set(tag_count.keys())
+    tag_probability = {tag: 0 for tag in unique_tags}
+    
+    # Create entry for "#UNK#" in emission_params
+    emission_params["#UNK#"] = deepcopy(tag_probability)
+    
+    for tag in count_tag.keys():
+        # denominator: used to normalise the emission probabilities
+        denominator = k + tag_count[tag]
+        for word in count_emission.keys():
+            if (word not in emission_paramaters):
+                emission_paramaters[word] = deepcopy(tag_probability)
+            numerator = count_emission[word][tag]
+            emission_paramaters[word][tag] = numerator/denominator
+        emission_paramaters["#UNK#"][tag] = k/denominator
+        # numerator: represents the count of occurences of a specific word associated with a particular tag in training data
+        numerator = count_emission[word][tag]
+    return emission_paramaters
+
+#-----------------------------#
+
+# def produce_tag(data_train, data_test, TAGS): # part c: For training
+#     # Create dictionary for storing data
+#     tag_dict = {}
+#     word_dict = {}
+#     k = find_k(data_train, data_test)
+#     # Create emission parameter tracking dictionary
+#     for tag in TAGS:
+#         tag_dict[tag] = estimate_emission_parameter_v3(data_train, k, tag)
+#         # Create a word list using a dictionary
+#         for key in tag_dict[tag].keys(): 
+#             word_dict[key] = None
+#     # Loop through word list to assign tag
+#     for word in word_dict.keys():
+#         emission_parameter = 0
+#         y_star = None
+#         for tag in TAGS:
+#             try: # To ignore error if dictionary lacks the key
+#                 if (tag_dict[tag][word] > emission_parameter):
+#                     emission_parameter = tag_dict[tag][word]
+#                     y_star = tag
+#             except:
+#                 pass
+#         word_dict[word] = y_star # Predicted Tag for each training word
+#     return word_dict
+
+#-----------------------------#
 
 # Precision function
 def precision(correctly_predicted_entities, total_predicted_entities):
