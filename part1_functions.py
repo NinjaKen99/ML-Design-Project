@@ -120,11 +120,13 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
     total_correct_predictions = 0
     total_predicted_entities = 0
     total_gold_entities = count_gold_entities(gold_tags)
+    print(total_gold_entities)
     # Get lines for each file
     data_test = file.split("\n")
     data_check = gold_tags.split("\n")
     # Entity Tracker
     predict_back = None
+    entity_wrong = False
     
     for word, gold_line in zip(data_test, data_check):
         word_tag_pair = ""
@@ -140,18 +142,45 @@ def sentiment_analysis(file, emission_parameters,gold_tags):
             # Get golden tag
             pair = gold_line.split(" ")
             gold_tag = pair[1]
-            # Ignore if O
-            if (tag_for_word != "O"):
-                # Ignore if same entity (predicted)
-                if (tag_for_word != predict_back):
-                    if tag_for_word == gold_tag:
-                        total_correct_predictions += 1
+            # Count number of predictions
+            if (predict_back == None and tag_for_word != "O"):
+                total_predicted_entities += 1
+            elif (predict_back != None and tag_for_word != "O"):
+                if (tag_for_word[2:] != predict_back[2:] or tag_for_word[0] == "B"):
                     total_predicted_entities += 1
+            else: 
+                predict_back = None
+            # Ignore if O
+            if (gold_tag == "O"):
+                if tag_for_word != gold_tag:
+                    entity_wrong = True
                     predict_back = tag_for_word
-            else: predict_back = None
+                else:
+                    entity_wrong = False
+                    predict_back = None
+            else:
+                if (predict_back == None):
+                    if (tag_for_word == gold_tag):
+                        total_correct_predictions += 1
+                    else:
+                        entity_wrong = True
+                    predict_back = tag_for_word
+                else:
+                    if (tag_for_word[0] == "B" or tag_for_word[2:] != predict_back[2:]): # check if different entity
+                        if (tag_for_word == gold_tag):
+                            total_correct_predictions += 1
+                            entity_wrong = False
+                        else:
+                            entity_wrong = True
+                    elif (not entity_wrong):
+                        if (tag_for_word != gold_tag):
+                            entity_wrong = True
+                            total_correct_predictions -= 1
+                    predict_back = tag_for_word
                 
         else: word_tag_list.append("") # Recreate empty lines
-            
+    
+    print(total_predicted_entities)        
     p = precision(total_correct_predictions, total_predicted_entities)
     r = recall(total_correct_predictions, total_gold_entities)
     f = f_score(p, r)
@@ -166,11 +195,23 @@ def count_gold_entities(data):
         if (line != ""):
             pair = line.split(" ")
             tag = pair[1]
-            if (tag == "O"):
-                previous_tag = None
-            elif (tag != previous_tag):
-                number += 1
-                previous_tag = tag
+            match tag:
+                case "O":
+                    previous_tag = None
+                case "I-positive" | "I-negative" | "I-neutral":
+                    if (previous_tag == None): 
+                        number += 1
+                        previous_tag = tag
+                    elif (previous_tag[2:] == tag[2:]):
+                        pass
+                    else:
+                        number += 1
+                        previous_tag = tag
+                case _:
+                    number += 1
+                    previous_tag = tag
+        else:
+            previous_tag = None
     return number
 
 #____________________TESTING____________________#
