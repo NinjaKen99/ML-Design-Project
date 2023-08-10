@@ -65,6 +65,7 @@ RU_train = open_labelled_data('RU/train')
 RU_dev_in = open_unlabelled_data('RU/dev.in')
 
 #-----------------------------#
+TAGS =  ['B-positive', 'B-negative', 'B-neutral', 'I-positive', 'I-negative', 'I-neutral', 'O']
 
 
 '''
@@ -96,7 +97,6 @@ I_Negative = "I-negative"
 I_Neutral = "I-neutral"
 Outside = "O"
 
-TAGS = (B_Positive, B_Negative, B_Neutral, I_Positive, I_Negative, I_Neutral, Outside)
 
 ### WORDS ###
 Invalid_Word = "#UNK#"
