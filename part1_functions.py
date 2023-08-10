@@ -6,8 +6,6 @@ from fixed_parameters import open_labelled_data, open_unlabelled_data
 
 # Functions
 
-#-----------------------------#
-
 def estimate_emission_params(words, tags, k=1):
     # Initialize dictionaries to store emission probabilities and observed words
     emission_params = {}  # Stores emission probabilities for each tag and word
@@ -35,7 +33,7 @@ def estimate_emission_params(words, tags, k=1):
     
     # Calculate emission probabilities for each tag and word
     for tag in emission_params.keys():
-        for emission_observation in emission_params[tag].keys():
+        for emission_observation in emission_params[tag].keys(): # Iterate through each word observed for the tag
             if emission_observation != 'Total':
                 # Calculate and store emission probability
                 emission_params[tag][emission_observation] = emission_params[tag][emission_observation] / emission_params[tag]['Total']
