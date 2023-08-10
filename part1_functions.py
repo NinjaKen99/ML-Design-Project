@@ -7,38 +7,30 @@ from fixed_parameters import open_labelled_data, open_unlabelled_data
 # Functions
 
 def estimate_emission_params(words, tags, k=1):
-    # Initialize dictionaries to store emission probabilities and observed words
-    emission_params = {}  # Stores emission probabilities for each tag and word
-    words_observed = {}   # Stores observed words
+    emission_params = {}  # Emission probabilities for each tag and word
+    words_observed = {}   # Observed words
     
-    # Loop through each sentence and its words in the tagged data
-    for sentence in range(len(tags)):
-        for tag_for_word in range(len(tags[sentence])):
-            # Check if the tag is already a key in emission_params
-            if tags[sentence][tag_for_word] not in emission_params.keys():
-                # Initialize emission_params[tag] with counts for smoothing
-                emission_params[tags[sentence][tag_for_word]] = {'Total': k, '#UNK#': k}
+    # Iterate through each sentence and word in the tagged data
+    for sentence, sentence_tags in zip(words, tags):
+        for word, tag in zip(sentence, sentence_tags):
+            # Initialize tag's emission_params if it's not in emission_params
+            if tag not in emission_params:
+                emission_params[tag] = {'Total': k, '#UNK#': k}
             
-            # Get the current count of the word's emission for the tag
-            current_count = emission_params[tags[sentence][tag_for_word]].get(words[sentence][tag_for_word], 0)
+            # Increment emission count for the tag and word
+            emission_params[tag][word] = emission_params[tag].get(word, 0) + 1
+            emission_params[tag]['Total'] += 1
             
-            # Increment the emission count for the word's tag and word
-            emission_params[tags[sentence][tag_for_word]][words[sentence][tag_for_word]] = current_count + 1
-            
-            # Increment the total emission count for the tag
-            emission_params[tags[sentence][tag_for_word]]['Total'] += 1
-            
-            # Track that the word has been observed
-            words_observed[words[sentence][tag_for_word]] = True
+            # Track observed words
+            words_observed[word] = True
     
-    # Calculate emission probabilities for each tag and word
-    for tag in emission_params.keys():
-        for emission_observation in emission_params[tag].keys(): # Iterate through each word observed for the tag
-            if emission_observation != 'Total':
-                # Calculate and store emission probability
-                emission_params[tag][emission_observation] = emission_params[tag][emission_observation] / emission_params[tag]['Total']
+    # Calculate emission probabilities
+    for tag, tag_counts in emission_params.items():
+        total_count = tag_counts['Total']
+        for word in tag_counts:
+            if word != 'Total':
+                emission_params[tag][word] = tag_counts[word] / total_count
     
-    # Return the calculated emission probabilities and observed words
     return emission_params, words_observed
 
 #-----------------------------#

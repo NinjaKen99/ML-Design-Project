@@ -11,7 +11,7 @@ from fixed_parameters import open_labelled_data, open_unlabelled_data
 
 def estimate_transition_params(tags):
     # Initialize the transition parameters dictionary with 'Start' and 'Stop' tags
-    transition_params = {'Start': {'Total': 0}, 'Stop': {'Total': 0}}
+    transition_params = {'Start': {'Total': 0}}
     
     # Count transitions between tags
     for sentence in range(len(tags)):  # For each sentence
@@ -66,13 +66,13 @@ def estimate_emission_params_log(words, tags, k=1):
             current_count = emission_params[tags[sentence][tag_for_word]].get(words[sentence][tag_for_word], 0)
             
             # Increment the emission count for the word's tag and word
-            emission_params[tags[sentence][tag_for_word]][words[sentence][tag_for_word]] = current_count + 1
+            emission_params[tags[sentence][tag_for_word]][words[sentence][tag_for_word].lower()] = current_count + 1
             
             # Increment the total emission count for the tag
             emission_params[tags[sentence][tag_for_word]]['Total'] += 1
             
             # Track that the word has been observed
-            words_observed[words[sentence][tag_for_word]] = True
+            words_observed[words[sentence][tag_for_word].lower()] = True
     
     # Calculate emission log-probabilities for each tag and word
     for tag in emission_params.keys():
@@ -133,17 +133,18 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
     # Get the list of tags for transition calculation
     tag_list = list(transition_params.keys())
     tag_list.remove('Start')  # Remove 'Start' tag from the list
-    tag_list.remove('Stop')   # Remove 'Stop' tag from the list
 
     # Iterate through each position in the sentence
     for j in range(n):
+        lowerword = sentence[j].lower()
         memo.append({})  # Initialize the memoization dictionary for this position
         
         # Check if the word is in the training set, else set to '#UNK#'
-        if words_observed.get(sentence[j], False):
-            word = sentence[j]
+        if lowerword in words_observed:
+            word = lowerword
         else:
             word = '#UNK#'
+
 
         # Calculate scores for each possible next tag
         for next_tag in tag_list:
@@ -173,6 +174,7 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
             # Only add an entry if it is meaningful for easier debugging
             if new_tag != '':
                 memo[j+1][next_tag] = (max_score, new_tag)
+                print("memo at pre tag: ", prev_tag, "", memo)
         
         # Unexpected Transition Scenario where all possible combinations lead to a probability of 0 (log-prob = -inf)
         # Default behavior is to assign 'O' as a label and set the log-prob as the max in the previous step
@@ -261,7 +263,7 @@ transition_params = estimate_transition_params(tags)
 # smoothed_transition_params = smooth_transition_params(transition_params)
 
 # Print the list of keys (tags) in the transition parameters dictionary
-print("Tags in transition_params:", list(transition_params.keys()))
+print("Tags in transition_params:", transition_params)
 
 # Example tag for testing
 tag = 'B-negative'
@@ -289,6 +291,8 @@ transition_params = estimate_transition_params(tags)
 
 # Estimate emission parameters and observed words using training data
 emission_params, words_observed = estimate_emission_params_log(words, tags)
+
+print("emission_params", emission_params["O"].values())
 
 # Apply Laplace smoothing to emission parameters
 # smoothed_emission_params = smooth_emission_params(emission_params, words_observed)
