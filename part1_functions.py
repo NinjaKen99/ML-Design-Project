@@ -6,36 +6,86 @@ from fixed_parameters import open_labelled_data, open_unlabelled_data
 
 # Functions
 
+
 def estimate_emission_params(words, tags, k=1):
     emission_params = {}  # Emission probabilities for each tag and word
     words_observed = {}   # Observed words
-    
+
     # Iterate through each sentence and word in the tagged data
     for sentence, sentence_tags in zip(words, tags):
         for word, tag in zip(sentence, sentence_tags):
             # Initialize tag's emission_params if it's not in emission_params
             if tag not in emission_params:
                 emission_params[tag] = {'Total': k, '#UNK#': k}
-            
+
             # Increment emission count for the tag and word
             emission_params[tag][word] = emission_params[tag].get(word, 0) + 1
             emission_params[tag]['Total'] += 1
-            
+
             # Track observed words
             words_observed[word] = True
-    
+
     # Calculate emission probabilities
     for tag, tag_counts in emission_params.items():
         total_count = tag_counts['Total']
         for word in tag_counts:
             if word != 'Total':
                 emission_params[tag][word] = tag_counts[word] / total_count
-    
+
+    return emission_params, words_observed
+
+
+def estimate_emission_params_vote_based(words, tags, k=1):
+    emission_params = {}  # Emission probabilities for each tag and sentiment
+    words_observed = {}   # Observed words
+
+    for sentence, sentence_tags in zip(words, tags):
+        sentiment_counts = {'B-positive': 0, 'B-negative': 0,
+                            'B-neutral': 0, 'I-positive': 0, 'I-negative': 0, 'I-neutral': 0}
+
+        for tag in sentence_tags:
+            if tag in sentiment_counts:
+                sentiment_counts[tag] += 1
+
+        dominant_sentiment = max(sentiment_counts, key=sentiment_counts.get)
+
+        for word, tag in zip(sentence, sentence_tags):
+            if tag not in emission_params:
+                emission_params[tag] = {'Total': k, '#UNK#': k}
+
+            if tag.startswith('I-') and dominant_sentiment == 'B-positive':
+                tag = 'B-positive'
+            elif tag.startswith('I-') and dominant_sentiment == 'B-negative':
+                tag = 'B-negative'
+            elif tag.startswith('I-') and dominant_sentiment == 'B-neutral':
+                tag = 'B-neutral'
+
+            elif tag.startswith('B-') and dominant_sentiment == 'I-positive':
+                tag = 'I-positive'
+            elif tag.startswith('B-') and dominant_sentiment == 'I-negative':
+                tag = 'I-negative'
+            elif tag.startswith('B-') and dominant_sentiment == 'I-neutral':
+                tag = 'I-neutral'
+
+            if tag not in emission_params:
+                emission_params[tag] = {'Total': k, '#UNK#': k}
+
+            emission_params[tag][word] = emission_params[tag].get(word, 0) + 1
+            emission_params[tag]['Total'] += 1
+
+    for tag, tag_counts in emission_params.items():
+        total_count = tag_counts['Total']
+        for word in tag_counts:
+            if word != 'Total':
+                emission_params[tag][word] = tag_counts[word] / total_count
+
     return emission_params, words_observed
 
 #-----------------------------#
 
 # Calculate and return the most likely tag (label) for a given word based on emission probabilities
+
+
 def highest_probability_tag(emission_params, words_observed, word):
     max_prob = 0  # Initialize maximum probability
     # Check if the word is in the training set, otherwise set it to '#UNK#'
@@ -49,6 +99,8 @@ def highest_probability_tag(emission_params, words_observed, word):
     return tag
 
 # Predict tags for an input file and write the predictions to an output file
+
+
 def sentiment_analysis(emission_params, words_observed, data_input_path, data_output_file):
     with open(data_input_path, 'r', encoding="utf-8") as input_file:
         with open(data_output_file, 'w', encoding="utf-8") as output_file:
@@ -57,19 +109,24 @@ def sentiment_analysis(emission_params, words_observed, data_input_path, data_ou
                     output_file.write('\n')  # Write a newline for empty lines
                 else:
                     word = line.strip()  # Extract the word from the line
-                    label = highest_probability_tag(emission_params, words_observed, word)  # Get the predicted tag
-                    output_file.write(word + ' ' + label + '\n')  # Write word and predicted label to the output file
+                    label = highest_probability_tag(
+                        emission_params, words_observed, word)  # Get the predicted tag
+                    # Write word and predicted label to the output file
+                    output_file.write(word + ' ' + label + '\n')
+
 
 # Generate output predictions for different datasets and languages
 # For the ES (Spanish) dataset
 words, tags = ES_train
 transition_params, words_observed = estimate_emission_params(words, tags)
-sentiment_analysis(transition_params, words_observed, 'ES/dev.in', 'ES/dev.p1.out')
+sentiment_analysis(transition_params, words_observed,
+                   'ES/dev.in', 'ES/dev.p1.out')
 
 # For the RU (Russian) dataset
 words, tags = RU_train
 transition_params, words_observed = estimate_emission_params(words, tags)
-sentiment_analysis(transition_params, words_observed, 'RU/dev.in', 'RU/dev.p1.out')
+sentiment_analysis(transition_params, words_observed,
+                   'RU/dev.in', 'RU/dev.p1.out')
 
 #____________________TESTING____________________#
 # run funtions below
@@ -81,24 +138,30 @@ sentiment_analysis(transition_params, words_observed, 'RU/dev.in', 'RU/dev.p1.ou
 words, tags = ES_train
 
 # Calculate emission probabilities and track observed words
-transition_params, words_observed = estimate_emission_params(words, tags)
+# emission_params, words_observed = estimate_emission_params(words, tags)
+
+emission_params, words_observed = estimate_emission_params_vote_based(
+    words, tags)
+
 
 # Print the list of unique tags for which emission probabilities are calculated
-print("Unique tags for emission probabilities:", list(transition_params.keys()))
+print("Unique tags for emission probabilities:", list(emission_params.keys()))
 
 # Specify a tag and an observation for testing emission probabilities
 tag = 'B-negative'   # The tag for which emission probabilities are being tested
-observation = '#UNK#'  # The observation (word) for which emission probability is being tested
+# The observation (word) for which emission probability is being tested
+observation = '#UNK#'
 
 # Print the number of different words observed for the specified tag
-print("Number of different words observed for tag", tag, ":", len(transition_params[tag].keys()))
+print("Number of different words observed for tag",
+      tag, ":", len(emission_params[tag].keys()))
 
 # Print the calculated emission probability for the specified observation and tag
 print("Emission probability (e(x|y)) for observation", observation, "given tag", tag, ":",
-      transition_params[tag][observation])
+      emission_params[tag][observation])
 
 # Print the count estimate for the specified observation and tag using e(x|y) * count(y)
 print("Count estimate for observation", observation, "given tag", tag, ":",
-      transition_params[tag][observation] * transition_params[tag]['Total'])
+      emission_params[tag][observation] * emission_params[tag]['Total'])
 
 ### End of tester code for estimate_emission_params ###
