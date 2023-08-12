@@ -2,44 +2,47 @@
 import numpy as np
 
 # Imports from another file
-from fixed_parameters import ES_train, RU_train
+from fixed_parameters import ES_train, RU_train, TAGS
 from fixed_parameters import ES_dev_in, RU_dev_in
 from fixed_parameters import ES_dev_out, RU_dev_out
 from fixed_parameters import open_labelled_data, open_unlabelled_data
+from part2_functions import estimate_transition_params
+from part2_functions import estimate_emission_params_log
 
 # Functions
-
-#Modified viterbi_algo to find k-th best
-#Instead of storing just a tuple in memo, it now stores list of tuples of the top-k log-probs
-#Instead of storing prev_label, it stores path up to that point
-def k_viterbi_algo(transition_parameters, emission_parameters, vocab, sentence, k):
+def k_viterbi(transition_parameters, emission_parameters, words_observed, sentence, k):
     #Initialisation
     n = len(sentence)
     memo = []
-    memo.append({'START': [(0, [])]})
+    memo.append({'Start': [(0, [])]})
 
-    label_list = list(transition_parameters.keys())
-    label_list.remove('START')
-    label_list.remove('STOP')
+    label_list = TAGS
 
     for j in range(n):
         memo.append({})
         #Check if word in training set, else set to #UNK#
-        if vocab.get(sentence[j], False):
-            observation = sentence[j]
-        else:
-            observation = '#UNK#'
+        lowerword = sentence[j]
+        memo.append({})  # Initialize the memoization dictionary for this position
+        
+        # Check if the word is in the training set, else set to '#UNK#'
+        word = lowerword if lowerword in words_observed else '#UNK#'
 
         #Calc scores
         for next_label in label_list:
-            b = emission_parameters[next_label].get(observation, -float('inf'))
+            if word in emission_parameters[next_label]:
+                emission_prob = emission_parameters[next_label][word]
+            else:
+                emission_prob = -float("inf")
 
             entries = []
-            for prev_label in transition_parameters.keys():
-                prev_entries = memo[j].get(prev_label, [])
+            for prev_label in memo[j].keys():
+                prev_entries = memo[j][prev_label]
                 for v, path in prev_entries:
-                    a = transition_parameters.get(prev_label, {}).get(next_label, -float('inf'))
-                    new_score = v + b + a
+                    if prev_label in transition_parameters and next_label in transition_parameters[prev_label]:
+                        transition_prob = transition_parameters[prev_label][next_label]
+                    else:
+                        transition_prob = -float('inf')
+                    new_score = v + emission_prob + transition_prob
                     #only add entry if meaningful for easier debugging
                     if new_score > -float('inf'):
                         new_path = path.copy()
@@ -51,9 +54,8 @@ def k_viterbi_algo(transition_parameters, emission_parameters, vocab, sentence, 
             #only add entry if meaningful for easier debugging
             if len(entries) > 0:
                 memo[j + 1][next_label] = entries
-        
-        #edge case where by some miracle all possible combi lead to probability = 0 (log-prob = -inf) and nothing is recorded
-        #Current default is assign 'O' as label and set log-prob as max in prev step (with corresponding label)
+
+                
         if len(list(memo[j+1].keys())) < 1:
             entries = []
             for prev_label in transition_parameters.keys():
@@ -67,15 +69,19 @@ def k_viterbi_algo(transition_parameters, emission_parameters, vocab, sentence, 
                 entries.pop(0)
             if len(entries) > 0:
                 memo[j + 1]['O'] = entries
-            print('edge case encountered')
+            print('Unexpected Transition Scenario') # occurs when there are no valid transitions from the previous tag to any of the possible next tags. This can happen if the emission probabilities for all possible next tags are very low or if the transition probabilities from the previous tag to all possible next tags are also very low.
+
 
     #Termination
     entries = []
-    for prev_label in transition_parameters.keys():
-        prev_entries = memo[n].get(prev_label, [])
+    for prev_label in memo[j].keys():
+        prev_entries =  memo[j][prev_label]
         for v, path in prev_entries:
-            a = transition_parameters.get(prev_label, {}).get('STOP', -float('inf'))
-            new_score = v + a
+            if prev_label in transition_parameters and 'Stop' in transition_parameters[prev_label]:
+                transition_prob = transition_parameters[prev_label]['Stop']
+            else:
+                transition_prob = -float('inf')
+            new_score = v + transition_prob
             if new_score > -float('inf'):
                 new_path = path.copy()
                 new_path.append(prev_label)
@@ -83,39 +89,91 @@ def k_viterbi_algo(transition_parameters, emission_parameters, vocab, sentence, 
     entries.sort(key = lambda x: x[0])
     while len(entries) > k:
         entries.pop(0)
-    memo.append({'STOP': entries})
-
-    #Get k-th likely sequence
-    seq = memo[-1]['STOP'][0][1]
+    memo.append({'Stop': entries})
+    
+    seq = memo[-1]['Stop'][0][1]
     seq.pop(0)
     return seq
 
+
+
 #Predict labels for .in file and print to .out file
-def predict_labels_p3(emission_parameters, transition_parameters, vocab, k, input_file, output_file):
-    observations = read_unlabelled(input_file)
-    with open(output_file, 'w') as f_out:
-        for observation in observations:
-            labels = k_viterbi_algo(transition_parameters, emission_parameters, vocab, observation, k)
-            for i in range(len(observation)):
-                f_out.write(observation[i] + ' ' + labels[i] + '\n')
-            f_out.write('\n')
+# def predict_labels_p3(emission_parameters, transition_parameters, vocab, k, input_file, output_file):
+#     observations = read_unlabelled(input_file)
+#     with open(output_file, 'w') as f_out:
+#         for observation in observations:
+#             labels = k_viterbi_algo(transition_parameters, emission_parameters, vocab, observation, k)
+#             for i in range(len(observation)):
+#                 f_out.write(observation[i] + ' ' + labels[i] + '\n')
+#             f_out.write('\n')
 
 #____________________TESTING____________________#
-# run funtions below
+# run functions below
+
+#For ES
+# Load training data for words and tags
+words, tags = ES_train
+
+# Estimate transition parameters based on the training tags
+transition_params = estimate_transition_params(tags)
+
+# Estimate emission parameters and observed words using training data
+emission_params, words_observed = estimate_emission_params_log(words, tags)
+
+# Run k_viterbi twice, with 2nd position and 8th position for RU
+
+
+ES_words = open_unlabelled_data('ES/dev.in')
+with open('ES/dev.p3.2nd.out', 'w') as f_out:
+        for word in ES_words:
+            ES_labels = k_viterbi(transition_params, emission_params, words_observed, word, 2)
+            for i in range(len(word)-1):
+                f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
+            f_out.write('\n')
+
+print("ES 2ND DONE")
+with open('ES/dev.p3.8th.out', 'w') as f_out:
+        for word in words:
+            ES_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
+            for i in range(len(word)-1):
+                f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
+            f_out.write('\n')
+
+#----------------------------------------------------------------------------------------#
+
+#For RU
+# Load training data for words and tags
+words, tags = RU_train
+
+# Estimate transition parameters based on the training tags
+transition_params = estimate_transition_params(tags)
+
+# Estimate emission parameters and observed words using training data
+emission_params, words_observed = estimate_emission_params_log(words, tags)
+
+RU_words = open_unlabelled_data('RU/dev.in')
+with open('RU/dev.p3.2nd.out', 'w') as f_out:
+        for word in RU_words:
+            RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 2)
+            for i in range(len(word)-1):
+                f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
+            f_out.write('\n')
+
+with open('RU/dev.p3.8th.out', 'w') as f_out:
+        for word in RU_words:
+            RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
+            for i in range(len(word)-1):
+                f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
+            f_out.write('\n')
 
 #Testing
-observations, labels = read_labelled('Data/ES/train')
-transition_parameters = estimate_transition_parameters(labels)
-emission_parameters, vocab = estimate_emission_parameters(observations, labels)
-x = 23
-k = 4
-
-predict = k_viterbi_algo(transition_parameters, emission_parameters, vocab, observations[x], k)
-assert(len(labels[x]) == len(predict))
-print(labels[x])
-print(predict)
-
-# memo = k_viterbi_algo(transition_parameters, emission_parameters, vocab, observations[x], k)
-# print(len(observations[x]))
-# print(len(memo))
-# print(memo)
+# words, tags = RU_train
+# transition_parameters = estimate_transition_params(tags)
+# emission_parameters, vocab = estimate_emission_params_log(words, tags)
+# x = 23
+# k = 4
+# words, tags = ES_train
+# predict = k_viterbi_algo(transition_parameters, emission_parameters, vocab, words[x], k)
+# assert(len(tags[x]) == len(predict))
+# print(tags[x])
+# print(predict)

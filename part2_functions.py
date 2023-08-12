@@ -10,43 +10,42 @@ from fixed_parameters import open_labelled_data, open_unlabelled_data
 # Functions
 
 def estimate_transition_params(tags):
-    # Initialize the transition parameters dictionary with 'Start' and 'Stop' tags
     transition_params = {'Start': {'Total': 0}}
-    
+
     # Count transitions between tags
-    for sentence in range(len(tags)):  # For each sentence
-        for word_iterator in range(len(tags[sentence])):  # For each word in the sentence
-            # If it's the first word in the sentence, use 'Start' as the previous tag
-            if word_iterator == 0:
-                previous_tag = 'Start' # Use 'Start' as the previous tag
-            else:
-                previous_tag = tags[sentence][word_iterator - 1] # Use the previous tag
-            
-            # Initialize the count for the current tag under the previous tag
-            if previous_tag not in transition_params.keys(): # If the previous tag is not a key in transition_params
-                transition_params[previous_tag] = {'Total': 0} # Initialize the previous tag with a count for smoothing
-            
+    for sentence_tags in tags: 
+        previous_tag = 'Start' # Use 'Start' as the previous tag
+        
+        for current_tag in sentence_tags:
+            if previous_tag not in transition_params:
+                transition_params[previous_tag] = {'Total': 0}
+
             # Get the current count of transitions from previous tag to current tag
-            current_count = transition_params[previous_tag].get(tags[sentence][word_iterator], 0)
-            
+            current_count = transition_params[previous_tag].get(current_tag, 0)
+
             # Increment the count for the current tag transition
-            transition_params[previous_tag][tags[sentence][word_iterator]] = current_count + 1
-            
+            transition_params[previous_tag][current_tag] = current_count + 1
+
             # Increment the total count for transitions from the previous tag
             transition_params[previous_tag]['Total'] += 1
+
+            previous_tag = current_tag
         
+        if previous_tag not in transition_params:
+            transition_params[previous_tag] = {'Total': 0}
+
         # Count the transition from the last tag in the sentence to 'Stop'
-        current_count = transition_params[tags[sentence][-1]].get('Stop', 0) # Get the current count of transitions from the last tag to 'Stop'
-        transition_params[tags[sentence][-1]]['Stop'] = current_count + 1 # Increment the count for the current tag transition
-        transition_params[tags[sentence][-1]]['Total'] += 1 # Increment the total count for transitions from the last tag
+        current_count = transition_params[previous_tag].get('Stop', 0)
+        transition_params[previous_tag]['Stop'] = current_count + 1 # Increment the count for the current tag transition
+        transition_params[previous_tag]['Total'] += 1 # Increment the total count for transitions from the last tag
 
-    # Calculate the log-probabilities for transitions
-    for tag in transition_params.keys():  # For each tag
-        for transition_word in transition_params[tag].keys():  # For each transition word
-            if transition_word != 'Total': # If it's not the total count
-                transition_params[tag][transition_word] = np.log(transition_params[tag][transition_word] / transition_params[tag]['Total']) # Calculate the log-probability by dividing the count by the total count and taking the log
+     # Calculate the log-probabilities for transitions
+    for tag, tag_counts in transition_params.items(): # For each tag
+        total_count = tag_counts['Total'] 
+        for transition_word in tag_counts:
+            if transition_word != 'Total':  # If it's not the total count
+                transition_params[tag][transition_word] = np.log(transition_params[tag][transition_word] / total_count) # Calculate the log-probability by dividing the count by the total count and taking the log
 
-    
     return transition_params
 
 def estimate_emission_params_log(words, tags, k=1):
@@ -59,7 +58,7 @@ def estimate_emission_params_log(words, tags, k=1):
         for tag_for_word in range(len(tags[sentence])):
             # Check if the tag is already a key in emission_params
             if tags[sentence][tag_for_word] not in emission_params.keys():
-                # Initialize emission_params[tag] with counts for smoothing
+
                 emission_params[tags[sentence][tag_for_word]] = {'Total': k, '#UNK#': k}
             
             # Get the current count of the word's emission for the tag
@@ -95,28 +94,6 @@ def find_max_sentence_length(tags):
             max_length = len(sentence)  # Update the maximum length if necessary
 
     return max_length
-
-#-------------------------#
-
-# Apply Laplace smoothing to emission probabilities
-def smooth_emission_params(emission_params, words_observed, k=0.1):
-    smoothed_emission_params = {}
-    for label in emission_params:
-        smoothed_emission_params[label] = {}
-        for word in emission_params[label]:
-            smoothed_emission_params[label][word] = emission_params[label][word] + np.log(k / (emission_params[label]['Total'] + k * len(words_observed)))
-    return smoothed_emission_params
-
-# Apply Laplace smoothing to transition probabilities
-def smooth_transition_params(transition_params, k=0.1):
-    smoothed_transition_params = {}
-    for prev_label in transition_params:
-        smoothed_transition_params[prev_label] = {}
-        for next_label in transition_params[prev_label]:
-            if next_label != 'Total':
-                smoothed_transition_params[prev_label][next_label] = transition_params[prev_label][next_label] + np.log(k / (transition_params[prev_label]['Total'] + k * len(transition_params)))
-    return smoothed_transition_params
-
 
 #-------------------------#
 
@@ -246,7 +223,7 @@ def predict_tags_and_save(emission_params, transition_params, words_observed, da
 
 
 #____________________TESTING____________________#
-# run funtions below
+# run functions below
 
 ### Tester code for estimate_transition_params ###
 
@@ -256,8 +233,6 @@ words, tags = RU_train
 # Estimate transition parameters based on the training tags
 transition_params = estimate_transition_params(tags)
 
-# Apply Laplace smoothing to transition parameters
-# smoothed_transition_params = smooth_transition_params(transition_params)
 
 # Print the list of keys (tags) in the transition parameters dictionary
 print("Tags in transition_params:", transition_params)
@@ -289,197 +264,11 @@ transition_params = estimate_transition_params(tags)
 # Estimate emission parameters and observed words using training data
 emission_params, words_observed = estimate_emission_params_log(words, tags)
 
-# Apply Laplace smoothing to emission parameters
-# smoothed_emission_params = smooth_emission_params(emission_params, words_observed)
-
 # Choose a specific sentence index for testing
 x = 30
 
 # Apply the Viterbi algorithm to predict tags for the selected sentence
-#predict = viterbi_algo(transition_params, emission_params, words_observed, words[x])
-def k_viterbi(transition_parameters, emission_parameters, words_observed, sentence, k):
-    #Initialisation
-    n = len(sentence)
-    memo = []
-    memo.append({'Start': [(0, [])]})
-
-    label_list = TAGS
-
-    for j in range(n):
-        memo.append({})
-        #Check if word in training set, else set to #UNK#
-        #for some reason, if i use sentence[j].lower(), it will affect the results
-        lowerword = sentence[j]
-        memo.append({})  # Initialize the memoization dictionary for this position
-        
-        # Check if the word is in the training set, else set to '#UNK#'
-        word = lowerword if lowerword in words_observed else '#UNK#'
-
-        #Calc scores
-        for next_label in label_list:
-            if word in emission_parameters[next_label]:
-                emission_prob = emission_parameters[next_label][word]
-            else:
-                emission_prob = -float("inf")
-
-            entries = []
-            for prev_label in memo[j].keys():
-                prev_entries = memo[j][prev_label]
-                for v, path in prev_entries:
-                    if prev_label in transition_parameters and next_label in transition_parameters[prev_label]:
-                        transition_prob = transition_parameters[prev_label][next_label]
-                    else:
-                        transition_prob = -float('inf')
-                    new_score = v + emission_prob + transition_prob
-                    #only add entry if meaningful for easier debugging
-                    if new_score > -float('inf'):
-                        new_path = path.copy()
-                        new_path.append(prev_label)
-                        entries.append((new_score, new_path))
-            entries.sort(key = lambda x: x[0])
-            while len(entries) > k:
-                entries.pop(0)
-            #only add entry if meaningful for easier debugging
-            if len(entries) > 0:
-                memo[j + 1][next_label] = entries
-            #for some reason, when i refactor it with the code at the bottom, the answer changes.
-            # entries.sort(key=lambda x: x[0])
-            # entries = entries[:k] if len(entries) > k else entries
-            # if entries:
-            #     memo[j + 1][next_label] = entries
-
-                
-        
-        #edge case where by some miracle all possible combi lead to probability = 0 (log-prob = -inf) and nothing is recorded
-        #Current default is assign 'O' as label and set log-prob as max in prev step (with corresponding label)
-        if len(list(memo[j+1].keys())) < 1:
-            entries = []
-            for prev_label in memo[j].keys():
-                prev_entries = memo[j][prev_label]
-                for v, path in prev_entries:
-                    new_path = path.copy()
-                    new_path.append(prev_label)
-                    entries.append((v, new_path))
-            entries.sort(key = lambda x: x[0])
-            while len(entries) > k:
-                entries.pop(0)
-            if len(entries) > 0:
-                memo[j + 1]['O'] = entries
-            print('edge case encountered')
-
-    #Termination
-    entries = []
-    for prev_label in memo[j].keys():
-        prev_entries =  memo[j][prev_label]
-        for v, path in prev_entries:
-            if prev_label in transition_parameters and 'Stop' in transition_parameters[prev_label]:
-                transition_prob = transition_parameters[prev_label]['Stop']
-            else:
-                transition_prob = -float('inf')
-            new_score = v + transition_prob
-            if new_score > -float('inf'):
-                new_path = path.copy()
-                new_path.append(prev_label)
-                entries.append((new_score, new_path))
-    entries.sort(key = lambda x: x[0])
-    while len(entries) > k:
-        entries.pop(0)
-    memo.append({'Stop': entries})
-
-    #Get k-th likely sequence
-    seq = memo[-1]['Stop'][0][1]
-    seq.pop(0)
-    return seq
-
-
-def k_best_viterbi(transition_params, emission_params, words_observed, sentence, k):
-    n = len(sentence)
-    memo = []
-    memo.append({'Start': [(0, [])]})  # Initial state
-
-    tag_list = list(transition_params.keys())
-    tag_list.remove('Start')  # Remove 'Start' tag from the list
-
-    for j in range(n):
-        lowerword = sentence[j].lower()
-        memo.append({})  # Initialize the memoization dictionary for this position
-        
-        # Check if the word is in the training set, else set to '#UNK#'
-        word = lowerword if lowerword in words_observed else '#UNK#'
-
-        # Calculate scores for each possible next tag
-        for next_tag in tag_list:
-            emission_prob = emission_params[next_tag].get(word, -float('inf'))
-            
-            best_candidates = []
-            for prev_tag in memo[j].keys():
-                prev_candidates = memo[j][prev_tag]
-                for v, path in prev_candidates:
-                    viterbi_score = v
-
-                    if next_tag in transition_params[prev_tag]:
-                        transition_prob = transition_params[prev_tag][next_tag]
-                    else:
-                        transition_prob = -float('inf')
-
-                    new_score = viterbi_score + emission_prob + transition_prob
-
-                    if new_score > -float('inf'):
-                        new_path = path.copy()
-                        new_path.append(prev_tag)
-                        best_candidates.append((new_score, new_path))
-
-            best_candidates.sort(key=lambda x: x[0], reverse=True)
-            while len(best_candidates) > k:
-                best_candidates.pop()
-            if len(best_candidates) > 0:
-                memo[j + 1][next_tag] = best_candidates
-        
-        if len(list(memo[j+1].keys())) < 1:
-            best_candidates = []
-            for prev_tag in memo[j].keys():
-                prev_candidates = memo[j][prev_tag]
-                for v, path in prev_candidates:
-                    new_path = path.copy()
-                    new_path.append(prev_tag)
-                    best_candidates.append((v, new_path))
-
-            best_candidates.sort(key=lambda x: x[0], reverse=True)
-            while len(best_candidates) > k:
-                best_candidates.pop()
-            if len(best_candidates) > 0:
-                memo[j + 1]['O'] = best_candidates
-            print('Unexpected Transition Scenario')
-
-    best_candidates = []
-    for prev_tag in memo[n].keys():
-        prev_candidates = memo[n][prev_tag]
-        for v, path in prev_candidates:
-            viterbi_score = v
-            transition_prob = transition_params.get(prev_tag, {}).get('Stop', -float('inf'))
-            new_score = viterbi_score + transition_prob
-
-            if new_score > -float('inf'):
-                new_path = path.copy()
-                new_path.append(prev_tag)
-                best_candidates.append((new_score, new_path))
-
-    best_candidates.sort(key=lambda x: x[0], reverse=True)
-    while len(best_candidates) > k:
-        best_candidates.pop()
-
-    memo.append({'Stop': best_candidates})
-
-    results = []
-    for _, path in memo[-1]['Stop']:
-        sequence = path[1:]
-        sequence.reverse()
-        results.append(sequence)
-
-    return results
-
-k_predict = k_viterbi(transition_params,emission_params,words_observed,words[x],6)
-print("k_predict", k_predict)
+predict = viterbi_algo(transition_params, emission_params, words_observed, words[x])
 
 
 # Assert that the length of predicted tags matches the length of actual tags
