@@ -164,9 +164,8 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
                     max_log_prob = memo[j][prev_tag][0] 
                     new_tag = prev_tag
             memo[j+1]['O'] = (max_log_prob, new_tag)
-            print('Unexpected Transition Scenario') # occurs when there are no valid transitions from the previous tag to any of the possible next tags. This can happen if the emission probabilities for all possible next tags are very low or if the transition probabilities from the previous tag to all possible next tags are also very low.
 
-    # Termination step
+
     max_log_prob = -float('inf')
     new_tag = ''
     for prev_tag in transition_params.keys():
@@ -192,10 +191,6 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
         try:
             current_label = memo[memo_position][current_label][1]
         except KeyError:
-            # Handle cases where backtracking fails
-            # print(f'memo_position: {memo_position}, current_label: {current_label}, sequence: {sequence}')
-            # print(memo)
-            # print(sentence)
             break
         sequence.append(current_label)
 

@@ -71,16 +71,13 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
                 entries.pop(0)
             if len(entries) > 0:
                 memo[j + 1]['O'] = entries
-            print('Unexpected Transition Scenario') # occurs when there are no valid transitions from the previous tag to any of the possible next tags. This can happen if the emission probabilities for all possible next tags are very low or if the transition probabilities from the previous tag to all possible next tags are also very low.
 
-
-    #Termination step
     entries = []
     for prev_label in transition_parameters.keys():
         prev_entries = memo[n].get(prev_label, [])
-        for v, path in prev_entries:
+        for viterbi_score, path in prev_entries:
             a = transition_parameters.get(prev_label, {}).get('Stop', -float('inf'))
-            new_score = v + a
+            new_score = viterbi_score + a
             if new_score > -float('inf'):
                 new_path = path.copy()
                 new_path.append(prev_label)
