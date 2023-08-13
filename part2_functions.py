@@ -103,9 +103,10 @@ def find_max_sentence_length(tags):
 # N value is the maximum length of the sentence
 def viterbi_algo(transition_params, emission_params, words_observed, sentence):
     # Initialization
-    n = len(sentence)
     memo = []
     memo.append({'Start': (0, '')})  # Initial state
+    n = len(sentence)
+    
 
     # Get the list of tags for transition calculation
     tag_list = TAGS
@@ -121,7 +122,10 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
         # Calculate scores for each possible next tag
         for next_tag in tag_list:
             # Get the emission probability for the current word and next tag
-            emission_prob = emission_params[next_tag].get(word, -float('inf'))
+            if word in emission_params[next_tag]:
+                emission_prob = emission_params[next_tag][word]
+            else:
+                emission_prob = -float("inf")
             
             # Initialize the maximum score and the corresponding previous tag
             max_score = -float('inf')

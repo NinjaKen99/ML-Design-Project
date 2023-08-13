@@ -12,38 +12,40 @@ from part2_functions import estimate_emission_params_log
 # Functions
 def k_viterbi(transition_parameters, emission_parameters, words_observed, sentence, k):
     #Initialisation
-    n = len(sentence)
     memo = []
     memo.append({'Start': [(0, [])]})
-
-    label_list = TAGS
-
+    n = len(sentence)
+   
+  
+    # Get the list of tags for transition calculation
+    tag_list = TAGS
+    # Iterate through each position in the sentence
     for j in range(n):
         memo.append({})
-        #Check if word in training set, else set to #UNK#
         lowerword = sentence[j]
-        memo.append({})  # Initialize the memoization dictionary for this position
+        memo.append({})   # Initialize the memoization dictionary for this position
         
         # Check if the word is in the training set, else set to '#UNK#'
         word = lowerword if lowerword in words_observed else '#UNK#'
 
-        #Calc scores
-        for next_label in label_list:
-            if word in emission_parameters[next_label]:
-                emission_prob = emission_parameters[next_label][word]
+        # Calculate scores for each possible next tag, similar to previous viterbi
+        for next_tag in tag_list:
+            if word in emission_parameters[next_tag]:
+                emission_prob = emission_parameters[next_tag][word]
             else:
                 emission_prob = -float("inf")
 
             entries = []
             for prev_label in memo[j].keys():
                 prev_entries = memo[j][prev_label]
-                for v, path in prev_entries:
-                    if prev_label in transition_parameters and next_label in transition_parameters[prev_label]:
-                        transition_prob = transition_parameters[prev_label][next_label]
+                for viterbi_score, path in prev_entries:
+                    if prev_label in transition_parameters and next_tag in transition_parameters[prev_label]:
+                        transition_prob = transition_parameters[prev_label][next_tag]
                     else:
                         transition_prob = -float('inf')
-                    new_score = v + emission_prob + transition_prob
-                    #only add entry if meaningful for easier debugging
+                    
+                    # Calculate the new score based on Viterbi and transition probabilities
+                    new_score = viterbi_score + emission_prob + transition_prob
                     if new_score > -float('inf'):
                         new_path = path.copy()
                         new_path.append(prev_label)
@@ -51,19 +53,19 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
             entries.sort(key = lambda x: x[0])
             while len(entries) > k:
                 entries.pop(0)
-            #only add entry if meaningful for easier debugging
             if len(entries) > 0:
-                memo[j + 1][next_label] = entries
+                memo[j + 1][next_tag] = entries
 
-                
+        # Unexpected Transition Scenario where all possible combinations lead to a probability of 0 (log-prob = -inf)
+        # Default behavior is to assign 'O' as a label and set the log-prob as the max in the previous step
         if len(list(memo[j+1].keys())) < 1:
             entries = []
             for prev_label in transition_parameters.keys():
                 prev_entries = memo[j].get(prev_label, [])
-                for v, path in prev_entries:
+                for viterbi_score, path in prev_entries:
                     new_path = path.copy()
                     new_path.append(prev_label)
-                    entries.append((v, new_path))
+                    entries.append((viterbi_score, new_path))
             entries.sort(key = lambda x: x[0])
             while len(entries) > k:
                 entries.pop(0)
@@ -72,7 +74,7 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
             print('Unexpected Transition Scenario') # occurs when there are no valid transitions from the previous tag to any of the possible next tags. This can happen if the emission probabilities for all possible next tags are very low or if the transition probabilities from the previous tag to all possible next tags are also very low.
 
 
-    #Termination
+    #Termination step
     entries = []
     for prev_label in transition_parameters.keys():
         prev_entries = memo[n].get(prev_label, [])
@@ -88,10 +90,10 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
         entries.pop(0)
     memo.append({'Stop': entries})
 
-    #Get k-th likely sequence
-    seq = memo[-1]['Stop'][0][1]
-    seq.pop(0)
-    return seq
+    #Get k best output sequence
+    output = memo[-1]['Stop'][0][1]
+    output.pop(0)
+    return output
 
 #____________________TESTING____________________#
 # run functions below
