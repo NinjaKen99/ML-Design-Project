@@ -74,14 +74,11 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
 
     #Termination
     entries = []
-    for prev_label in memo[j].keys():
-        prev_entries =  memo[j][prev_label]
+    for prev_label in transition_parameters.keys():
+        prev_entries = memo[n].get(prev_label, [])
         for v, path in prev_entries:
-            if prev_label in transition_parameters and 'Stop' in transition_parameters[prev_label]:
-                transition_prob = transition_parameters[prev_label]['Stop']
-            else:
-                transition_prob = -float('inf')
-            new_score = v + transition_prob
+            a = transition_parameters.get(prev_label, {}).get('Stop', -float('inf'))
+            new_score = v + a
             if new_score > -float('inf'):
                 new_path = path.copy()
                 new_path.append(prev_label)
@@ -90,7 +87,8 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
     while len(entries) > k:
         entries.pop(0)
     memo.append({'Stop': entries})
-    
+
+    #Get k-th likely sequence
     seq = memo[-1]['Stop'][0][1]
     seq.pop(0)
     return seq
@@ -123,49 +121,56 @@ emission_params, words_observed = estimate_emission_params_log(words, tags)
 # Run k_viterbi twice, with 2nd position and 8th position for RU
 
 
-ES_words = open_unlabelled_data('ES/dev.in')
-with open('ES/dev.p3.2nd.out', 'w') as f_out:
-        for word in ES_words:
-            ES_labels = k_viterbi(transition_params, emission_params, words_observed, word, 2)
-            for i in range(len(word)-1):
-                f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
-            f_out.write('\n')
+ES_words_2 = open_unlabelled_data('ES/dev.in')
+with open('ES/dev.p3.2nd.out', 'w', encoding="utf-8") as f_out:
+    for word in ES_words_2:
+        ES_labels = k_viterbi(transition_params, emission_params, words_observed, word, 1)
+        for i in range(len(word)):
+ 
+            f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
+print("------------------------DONE------------------------")
 
+
+ES_words_8 = open_unlabelled_data('ES/dev.in')
 print("ES 2ND DONE")
-with open('ES/dev.p3.8th.out', 'w') as f_out:
-        for word in words:
-            ES_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
-            for i in range(len(word)-1):
-                f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
-            f_out.write('\n')
-
+with open('ES/dev.p3.8th.out', 'w', encoding='utf-8') as f_out:
+    for word in ES_words_8:
+    
+        ES_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
+        for i in range(len(word)):
+            f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
+        f_out.write('\n')
+print("Donerino")
 #----------------------------------------------------------------------------------------#
 
-#For RU
-# Load training data for words and tags
-words, tags = RU_train
+# #For RU
+# # Load training data for words and tags
+# words, tags = RU_train
 
-# Estimate transition parameters based on the training tags
-transition_params = estimate_transition_params(tags)
+# # Estimate transition parameters based on the training tags
+# transition_params = estimate_transition_params(tags)
 
-# Estimate emission parameters and observed words using training data
-emission_params, words_observed = estimate_emission_params_log(words, tags)
+# # Estimate emission parameters and observed words using training data
+# emission_params, words_observed = estimate_emission_params_log(words, tags)
 
-RU_words = open_unlabelled_data('RU/dev.in')
-with open('RU/dev.p3.2nd.out', 'w') as f_out:
-        for word in RU_words:
-            RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 2)
-            for i in range(len(word)-1):
-                f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
-            f_out.write('\n')
+# RU_words_2 = open_unlabelled_data('RU/dev.in')
+# with open('RU/dev.p3.2nd.out', 'w', encoding="utf-8") as f_out:
+#     for word in RU_words_2:
+#         RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 2)
+#         for i in range(len(word)):
+#             print(len(word),len(RU_labels))
+#             f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
+#         f_out.write('\n')
 
-with open('RU/dev.p3.8th.out', 'w') as f_out:
-        for word in RU_words:
-            RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
-            for i in range(len(word)-1):
-                f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
-            f_out.write('\n')
+# RU_words_8 = open_unlabelled_data('RU/dev.in')
+# with open('RU/dev.p3.8th.out', 'w', encoding="utf-8") as f_out:
+#     for word in RU_words_2:
+#         RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
+#         for i in range(len(word)):
+#             f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
+#         f_out.write('\n')
 
+# print("Done!")
 #Testing
 # words, tags = RU_train
 # transition_parameters = estimate_transition_params(tags)
