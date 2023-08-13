@@ -148,7 +148,7 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
             # Only add an entry if it is meaningful for easier debugging
             if new_tag != '':
                 memo[j+1][next_tag] = (max_score, new_tag)
-                print("memo at pre tag: ", memo)
+                # print("memo at pre tag: ", memo)
         
         # Unexpected Transition Scenario where all possible combinations lead to a probability of 0 (log-prob = -inf)
         # Default behavior is to assign 'O' as a label and set the log-prob as the max in the previous step
@@ -189,9 +189,9 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
             current_label = memo[memo_position][current_label][1]
         except KeyError:
             # Handle cases where backtracking fails
-            print(f'memo_position: {memo_position}, current_label: {current_label}, sequence: {sequence}')
-            print(memo)
-            print(sentence)
+            # print(f'memo_position: {memo_position}, current_label: {current_label}, sequence: {sequence}')
+            # print(memo)
+            # print(sentence)
             break
         sequence.append(current_label)
 
@@ -199,27 +199,22 @@ def viterbi_algo(transition_params, emission_params, words_observed, sentence):
 
 # Predicts and assigns tags to words in the given input data file and saves the result to an output file.
 def predict_tags_and_save(emission_params, transition_params, words_observed, data_input_path, data_output_path):
-    print("input",data_input_path,"\noutput",data_output_path)
+
     # Read unlabelled words from the input data file
     words = open_unlabelled_data(data_input_path)
-    # print("words",words)
     
     # Open the output data file for writing
-    # with open(data_output_path, 'w', encoding="utf-8") as output_file:
-    #     for word_list in words:
-    #         # print("word",word_list)
-    #         # Predict tags for each word using the Viterbi algorithm
-    #         tags = viterbi_algo(transition_params, emission_params, words_observed, word_list)
+    with open(data_output_path, 'w', encoding="utf-8") as output_file:
+        for word in words:
+            # Predict tags for each word using the Viterbi algorithm
+            tags = viterbi_algo(transition_params, emission_params, words_observed, word)
             
-    #         # Write the predicted word and its tag to the output file
-    #         for i in range(len(word_list)):
-    #             # print(word[i] + ' ' + tags[i] + '\n')
-    #             # ??? I am printing something out, but when i try to write into the file, it doesn't write anything???
-    #             output_file.write(word_list[i] + ' ' + tags[i] + '\n')
+            # Write the predicted word and its tag to the output file
+            for i in range(len(word)):
+                output_file.write(word[i] + ' ' + tags[i] + '\n')
             
-    #         # Write a newline character to separate sentences in the output file
-    #         # print('\n')
-    #         output_file.write('\n')
+            # Write a newline character to separate sentences in the output file
+            output_file.write('\n')
 
 
 #____________________TESTING____________________#

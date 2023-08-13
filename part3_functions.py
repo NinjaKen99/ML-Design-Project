@@ -93,18 +93,6 @@ def k_viterbi(transition_parameters, emission_parameters, words_observed, senten
     seq.pop(0)
     return seq
 
-
-
-#Predict labels for .in file and print to .out file
-# def predict_labels_p3(emission_parameters, transition_parameters, vocab, k, input_file, output_file):
-#     observations = read_unlabelled(input_file)
-#     with open(output_file, 'w') as f_out:
-#         for observation in observations:
-#             labels = k_viterbi_algo(transition_parameters, emission_parameters, vocab, observation, k)
-#             for i in range(len(observation)):
-#                 f_out.write(observation[i] + ' ' + labels[i] + '\n')
-#             f_out.write('\n')
-
 #____________________TESTING____________________#
 # run functions below
 
@@ -140,45 +128,5 @@ with open('ES/dev.p3.8th.out', 'w', encoding='utf-8') as f_out:
         for i in range(len(word)):
             f_out.write(word[i] + ' ' + ES_labels[i] + '\n')
         f_out.write('\n')
-print("Donerino")
+print("Donerino 🤪")
 #----------------------------------------------------------------------------------------#
-
-# #For RU
-# # Load training data for words and tags
-# words, tags = RU_train
-
-# # Estimate transition parameters based on the training tags
-# transition_params = estimate_transition_params(tags)
-
-# # Estimate emission parameters and observed words using training data
-# emission_params, words_observed = estimate_emission_params_log(words, tags)
-
-# RU_words_2 = open_unlabelled_data('RU/dev.in')
-# with open('RU/dev.p3.2nd.out', 'w', encoding="utf-8") as f_out:
-#     for word in RU_words_2:
-#         RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 2)
-#         for i in range(len(word)):
-#             print(len(word),len(RU_labels))
-#             f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
-#         f_out.write('\n')
-
-# RU_words_8 = open_unlabelled_data('RU/dev.in')
-# with open('RU/dev.p3.8th.out', 'w', encoding="utf-8") as f_out:
-#     for word in RU_words_2:
-#         RU_labels = k_viterbi(transition_params, emission_params, words_observed, word, 8)
-#         for i in range(len(word)):
-#             f_out.write(word[i] + ' ' + RU_labels[i] + '\n')
-#         f_out.write('\n')
-
-# print("Done!")
-#Testing
-# words, tags = RU_train
-# transition_parameters = estimate_transition_params(tags)
-# emission_parameters, vocab = estimate_emission_params_log(words, tags)
-# x = 23
-# k = 4
-# words, tags = ES_train
-# predict = k_viterbi_algo(transition_parameters, emission_parameters, vocab, words[x], k)
-# assert(len(tags[x]) == len(predict))
-# print(tags[x])
-# print(predict)
