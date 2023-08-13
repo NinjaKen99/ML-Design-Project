@@ -1,8 +1,6 @@
 # ML-Design-Project
 
-Part 1:
-
-To run the part 1,
+Part 1
 
     Run the python file first.
     open 2 terminals. cd one to the ES file and the other to the RU file.
